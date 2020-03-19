@@ -56,7 +56,6 @@ app.post("/insertUser", async (req, res) => {
     } else {
       collectionUsers.find({}).toArray((err, result) => {
         res.send(result);
-        console.log(result);
       });
     }
   });
@@ -81,7 +80,6 @@ app.post("/insertTask", async (req, res) => {
     } else {
       collection.find({}).toArray((err, result) => {
         res.send(result);
-        console.log(result);
       });
     }
   });
@@ -89,7 +87,6 @@ app.post("/insertTask", async (req, res) => {
 
 app.post("/deleteTask", async (req, res) => {
   const id = req.body.id;
-  console.log(id);
   collection.deleteOne({ _id: ObjectId(id) }).then(deleted => {
     collection.find({}).toArray((err, result) => {
       res.send(result);
