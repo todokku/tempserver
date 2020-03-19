@@ -18,6 +18,7 @@ const CONNECTION_URL =
 const DATABASE_NAME = "dashboard";
 let database;
 let collection;
+let collectionUsers;
 
 app.listen(process.env.PORT || port, () => {
   MongoClient.connect(
@@ -29,6 +30,7 @@ app.listen(process.env.PORT || port, () => {
       }
       database = client.db(DATABASE_NAME);
       collection = database.collection("masal");
+      collectionUsers = database.collection("users");
       console.log("Connected to `" + DATABASE_NAME + "`!");
     }
   );
@@ -38,6 +40,37 @@ app.get("/getAllTasks", async (req, res) => {
   collection.find({}).toArray((err, result) => {
     res.send(result);
   });
+});
+
+app.get("/getAllUsers", async (req, res) => {
+  collectionUsers.find({}).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+app.post("/insertUser", async (req, res) => {
+  const doc = req.body;
+  collectionUsers.insertOne(doc, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      collectionUsers.find({}).toArray((err, result) => {
+        res.send(result);
+        console.log(result);
+      });
+    }
+  });
+});
+
+app.post("/updateUser/:id", async (req, res) => {
+  const data = req.body;
+  collectionUsers
+    .replaceOne({ _id: ObjectId(req.params.id) }, data)
+    .then(result => {
+      collectionUsers.find({}).toArray((err, result) => {
+        res.send(result);
+      });
+    });
 });
 
 app.post("/insertTask", async (req, res) => {
