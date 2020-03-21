@@ -6,7 +6,6 @@ const port = 8080;
 // Connection to the mongo client
 const MongoClient = require("mongodb").MongoClient;
 const ObjectId = require("mongodb").ObjectID;
-const assert = require("assert");
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -40,6 +39,10 @@ app.get("/getAllTasks", async (req, res) => {
   collection.find({}).toArray((err, result) => {
     res.send(result);
   });
+});
+
+app.get("/", async (req, res) => {
+  res.send("ping");
 });
 
 app.get("/getCorona", async (req, res) => {
