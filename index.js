@@ -42,7 +42,7 @@ app.get("/getAllTasks", async (req, res) => {
 });
 
 app.get("/", async (req, res) => {
-  res.send("test");
+  res.send("tester");
 });
 
 app.get("/getCorona", async (req, res) => {
