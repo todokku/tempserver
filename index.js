@@ -42,6 +42,12 @@ app.get("/getAllTasks", async (req, res) => {
   });
 });
 
+app.get("/getCorona", async (req, res) => {
+  const cData = await fetch("https://israelcoronamap.co.il/data/dataHe.json");
+  const cResponse = await cData.json();
+  res.send(cResponse);
+});
+
 app.get("/getAllUsers", async (req, res) => {
   collectionUsers.find({}).toArray((err, result) => {
     res.send(result);
