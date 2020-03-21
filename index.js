@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const fetch = require("node-fetch");
-const port = 5000;
+const port = 8080;
 // Connection to the mongo client
 const MongoClient = require("mongodb").MongoClient;
 const ObjectId = require("mongodb").ObjectID;
