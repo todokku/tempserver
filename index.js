@@ -46,7 +46,7 @@ app.get("/", async (req, res) => {
 });
 
 app.get("/getCorona", async (req, res) => {
-  const cData = await fetch("https://israelcoronamap.co.il/data/dataHe.json");
+  const cData = await fetch("https://israelcoronamap.co.il/data/data-he.json");
   const cResponse = await cData.json();
   res.send(cResponse);
 });
