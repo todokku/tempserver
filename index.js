@@ -23,7 +23,7 @@ if (process.env.IS_PRODUCTION) {
     "mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority";
 }
 
-const CONNECTION_URL = mognoURL;
+const CONNECTION_URL = mongoURL;
 const DATABASE_NAME = "dashboard";
 let database;
 let collection;
