@@ -23,8 +23,7 @@ if (process.env.IS_PRODUCTION) {
     "mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority";
 }
 
-const CONNECTION_URL =
-  "mongodb+srv://mike:hellman@dashboard-vcavt.azure.mongodb.net/test?retryWrites=true&w=majority";
+const CONNECTION_URL = mognoURL;
 const DATABASE_NAME = "dashboard";
 let database;
 let collection;
