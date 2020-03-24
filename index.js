@@ -9,11 +9,21 @@ const ObjectId = require("mongodb").ObjectID;
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+require("dotenv").config();
 
 app.use(cors());
 
-const CONNECTION_URL =
-  "mongodb+srv://mike:hellman@dashboard-vcavt.azure.mongodb.net/test?retryWrites=true&w=majority";
+let mongoURL;
+
+if (process.env.IS_PRODUCTION === "true") {
+  mongoURL =
+    "mongodb+srv://mike:hellman@dashboard-vcavt.azure.mongodb.net/test?retryWrites=true&w=majority";
+} else {
+  mongoURL =
+    "mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority";
+}
+
+const CONNECTION_URL = mongoURL;
 const DATABASE_NAME = "dashboard";
 let database;
 let collection;
