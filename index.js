@@ -16,6 +16,7 @@ app.use(cors());
 let mongoURL;
 
 console.log(process.env.IS_PRODUCTION);
+console.log(typeof process.env.IS_PRODUCTION);
 
 if (process.env.IS_PRODUCTION) {
   mongoURL =
