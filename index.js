@@ -15,18 +15,13 @@ app.use(cors());
 
 let mongoURL;
 
-console.log(process.env.IS_PRODUCTION);
-console.log(typeof process.env.IS_PRODUCTION);
-
-if (process.env.IS_PRODUCTION) {
+if (process.env.IS_PRODUCTION === "true") {
   mongoURL =
     "mongodb+srv://mike:hellman@dashboard-vcavt.azure.mongodb.net/test?retryWrites=true&w=majority";
 } else {
   mongoURL =
     "mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority";
 }
-
-console.log(mongoURL);
 
 const CONNECTION_URL = mongoURL;
 const DATABASE_NAME = "dashboard";
