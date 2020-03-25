@@ -24,10 +24,9 @@ if (process.env.IS_PRODUCTION === "true") {
 }
 
 const CONNECTION_URL = mongoURL;
-const DATABASE_NAME = "dashboard";
+const DATABASE_NAME = "dashboard-new";
 let database;
-let collection;
-let collectionUsers;
+let users, missions, tasks;
 
 app.listen(process.env.PORT || port, () => {
   MongoClient.connect(
@@ -39,16 +38,12 @@ app.listen(process.env.PORT || port, () => {
       }
       database = client.db(DATABASE_NAME);
       collection = database.collection("masal");
-      collectionUsers = database.collection("users");
+      users = database.collection("users");
+      missions = database.collection("missions");
+      tasks = database.collection("tasks");
       console.log("Connected to `" + DATABASE_NAME + "`!");
     }
   );
-});
-
-app.get("/getAllTasks", async (req, res) => {
-  collection.find({}).toArray((err, result) => {
-    res.send(result);
-  });
 });
 
 app.get("/", async (req, res) => {
@@ -61,13 +56,13 @@ app.get("/getCorona", async (req, res) => {
   res.send(cResponse);
 });
 
-app.get("/getAllUsers", async (req, res) => {
-  collectionUsers.find({}).toArray((err, result) => {
+app.get("/users", async (req, res) => {
+  users.find({}).toArray((err, result) => {
     res.send(result);
   });
 });
 
-app.post("/insertUser", async (req, res) => {
+app.post("/users", async (req, res) => {
   const doc = req.body;
   collectionUsers.insertOne(doc, (err, result) => {
     if (err) {
@@ -80,7 +75,7 @@ app.post("/insertUser", async (req, res) => {
   });
 });
 
-app.post("/updateUser/:id", async (req, res) => {
+app.put("/users/:id", async (req, res) => {
   const data = req.body;
   collectionUsers
     .replaceOne({ _id: ObjectId(req.params.id) }, data)
@@ -91,7 +86,13 @@ app.post("/updateUser/:id", async (req, res) => {
     });
 });
 
-app.post("/insertTask", async (req, res) => {
+app.get("/tasks", async (req, res) => {
+  tasks.find({}).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+app.post("/tasks", async (req, res) => {
   const doc = req.body;
   collection.insertOne(doc, (err, result) => {
     if (err) {
@@ -104,18 +105,18 @@ app.post("/insertTask", async (req, res) => {
   });
 });
 
-app.post("/deleteTask", async (req, res) => {
-  const id = req.body.id;
-  collection.deleteOne({ _id: ObjectId(id) }).then(deleted => {
+app.put("/tasks/:id", async (req, res) => {
+  const data = req.body;
+  collection.replaceOne({ _id: ObjectId(req.params.id) }, data).then(result => {
     collection.find({}).toArray((err, result) => {
       res.send(result);
     });
   });
 });
 
-app.post("/updateTask/:id", async (req, res) => {
-  const data = req.body;
-  collection.replaceOne({ _id: ObjectId(req.params.id) }, data).then(result => {
+app.delete("/tasks/:id", async (req, res) => {
+  const id = req.params.id;
+  collection.deleteOne({ _id: ObjectId(id) }).then(deleted => {
     collection.find({}).toArray((err, result) => {
       res.send(result);
     });
