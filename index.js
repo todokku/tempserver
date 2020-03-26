@@ -13,18 +13,20 @@ require("dotenv").config();
 
 app.use(cors());
 
-let mongoURL;
+let CONNECTION_URL;
+let DATABASE_NAME;
 
 if (process.env.IS_PRODUCTION === "true") {
-  mongoURL =
+  CONNECTION_URL =
     "mongodb+srv://mike:hellman@dashboard-vcavt.azure.mongodb.net/test?retryWrites=true&w=majority";
+  DATABASE_NAME = "dashboard";
 } else {
-  mongoURL =
+  CONNECTION_URL =
     "mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority";
+  DATABASE_NAME = "dashboard-new";
 }
 
-const CONNECTION_URL = mongoURL;
-const DATABASE_NAME = "dashboard-new";
+
 let database;
 let users, missions, tasks;
 
@@ -37,7 +39,6 @@ app.listen(process.env.PORT || port, () => {
         throw error;
       }
       database = client.db(DATABASE_NAME);
-      collection = database.collection("masal");
       users = database.collection("users");
       missions = database.collection("missions");
       tasks = database.collection("tasks");
@@ -56,71 +57,79 @@ app.get("/getCorona", async (req, res) => {
   res.send(cResponse);
 });
 
-app.get("/users", async (req, res) => {
+app.get("/users", (req, res) => {
   users.find({}).toArray((err, result) => {
     res.send(result);
   });
 });
 
-app.post("/users", async (req, res) => {
+app.post("/users", (req, res, next) => {
   const doc = req.body;
-  collectionUsers.insertOne(doc, (err, result) => {
+  users.insertOne(doc, (err, result) => {
     if (err) {
       console.log(err);
-    } else {
-      collectionUsers.find({}).toArray((err, result) => {
-        res.send(result);
-      });
+      next(err);
     }
   });
 });
 
 app.put("/users/:id", async (req, res) => {
   const data = req.body;
-  collectionUsers
-    .replaceOne({ _id: ObjectId(req.params.id) }, data)
-    .then(result => {
-      collectionUsers.find({}).toArray((err, result) => {
-        res.send(result);
-      });
-    });
+  await users.replaceOne({ _id: ObjectId(req.params.id) }, data)
+  res.sendStatus(200);
 });
 
-app.get("/tasks", async (req, res) => {
-  tasks.find({}).toArray((err, result) => {
+app.get("/users/:userId/tasks", (req, res) => {
+  tasks.find({ receivingUser: req.params.userId }).toArray((err, result) => {
     res.send(result);
   });
 });
 
-app.post("/tasks", async (req, res) => {
+app.get("/users/:userId/missions", (req, res) => {
+  missions.find({ senderUser: req.params.userId }).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+app.get("/missions", (req, res) => {
+  missions.find({}).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+
+app.get("/desks/:deskId/missions", (req, res) => {
+  missions.find({ senderDesk: req.params.deskId }).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+app.get("/desks/:deskId/tasks", (req, res) => {
+  missions.find({ receivingDesk: req.params.deskId }).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+app.post("/missions", (req, res, next) => {
   const doc = req.body;
-  collection.insertOne(doc, (err, result) => {
+  missions.insertOne(doc, (err, result) => {
     if (err) {
       console.log(err);
-    } else {
-      collection.find({}).toArray((err, result) => {
-        res.send(result);
-      });
+      next(err);
     }
   });
 });
 
-app.put("/tasks/:id", async (req, res) => {
+app.put("/missions/:id", async (req, res) => {
   const data = req.body;
-  collection.replaceOne({ _id: ObjectId(req.params.id) }, data).then(result => {
-    collection.find({}).toArray((err, result) => {
-      res.send(result);
-    });
-  });
+  await missions.replaceOne({ _id: ObjectId(req.params.id) }, data);
+  res.sendStatus(200);
 });
 
-app.delete("/tasks/:id", async (req, res) => {
+app.delete("/missions/:id", async (req, res) => {
   const id = req.params.id;
-  collection.deleteOne({ _id: ObjectId(id) }).then(deleted => {
-    collection.find({}).toArray((err, result) => {
-      res.send(result);
-    });
-  });
+  await missions.deleteOne({ _id: ObjectId(id) });
+  res.sendStatus(200);
 });
 
 /* TEST - ONLY UNCOMMENT IF AND ONLY IF THERE IS A CRITICAL DB/SERVER CONNECTION ERROR - UNCOMMENT ABOVE IN CLIENT CONNECT
