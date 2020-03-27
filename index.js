@@ -81,14 +81,14 @@ app.put("/users/:id", async (req, res) => {
   res.sendStatus(200);
 });
 
-app.get("/users/:userId/tasks", (req, res) => {
-  tasks.find({ receivingUserId: req.params.userId }).toArray((err, result) => {
+app.get("/users/:userId/missions", (req, res) => {
+  missions.find({ senderUserId: req.params.userId }).toArray((err, result) => {
     res.send(result);
   });
 });
 
-app.get("/users/:userId/missions", (req, res) => {
-  missions.find({ senderUserId: req.params.userId }).toArray((err, result) => {
+app.get("/users/:userId/tasks", (req, res) => {
+  tasks.find({ receivingUserId: req.params.userId }).toArray((err, result) => {
     res.send(result);
   });
 });
@@ -107,7 +107,19 @@ app.get("/desks/:deskId/missions", (req, res) => {
 });
 
 app.get("/desks/:deskId/tasks", (req, res) => {
-  missions.find({ receivingDeskId: req.params.deskId }).toArray((err, result) => {
+  tasks.find({ receivingDeskId: req.params.deskId }).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+app.get("/admin/:adminId/missions", (req, res) => {
+  missions.find({ senderAdminId: req.params.adminId }).toArray((err, result) => {
+    res.send(result);
+  });
+});
+
+app.get("/admin/:adminId/tasks", (req, res) => {
+  tasks.find({ }).toArray((err, result) => {
     res.send(result);
   });
 });
