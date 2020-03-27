@@ -5,7 +5,6 @@ const fetch = require("node-fetch");
 const port = 8080;
 // Connection to the mongo client
 const MongoClient = require("mongodb").MongoClient;
-const ObjectId = require("mongodb").ObjectID;
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -77,7 +76,7 @@ app.post("/users", (req, res, next) => {
 
 app.put("/users/:id", async (req, res) => {
   const data = req.body;
-  await users.replaceOne({ _id: ObjectId(req.params.id) }, data)
+  await users.replaceOne({ _id: req.params.id }, data)
   res.sendStatus(200);
 });
 
@@ -138,13 +137,13 @@ app.post("/missions", (req, res, next) => {
 
 app.put("/missions/:id", async (req, res) => {
   const data = req.body;
-  await missions.replaceOne({ _id: ObjectId(req.params.id) }, data);
+  await missions.replaceOne({ _id: req.params.id }, data);
   res.sendStatus(200);
 });
 
 app.delete("/missions/:id", async (req, res) => {
   const id = req.params.id;
-  await missions.deleteOne({ _id: ObjectId(id) });
+  await missions.deleteOne({ _id: id });
   res.sendStatus(200);
 });
 
