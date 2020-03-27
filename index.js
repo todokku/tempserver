@@ -69,6 +69,8 @@ app.post("/users", (req, res, next) => {
     if (err) {
       console.log(err);
       next(err);
+    } else {
+      res.sendStatus(200);
     }
   });
 });
@@ -80,13 +82,13 @@ app.put("/users/:id", async (req, res) => {
 });
 
 app.get("/users/:userId/tasks", (req, res) => {
-  tasks.find({ receivingUser: req.params.userId }).toArray((err, result) => {
+  tasks.find({ receivingUserId: req.params.userId }).toArray((err, result) => {
     res.send(result);
   });
 });
 
 app.get("/users/:userId/missions", (req, res) => {
-  missions.find({ senderUser: req.params.userId }).toArray((err, result) => {
+  missions.find({ senderUserId: req.params.userId }).toArray((err, result) => {
     res.send(result);
   });
 });
@@ -99,13 +101,13 @@ app.get("/missions", (req, res) => {
 
 
 app.get("/desks/:deskId/missions", (req, res) => {
-  missions.find({ senderDesk: req.params.deskId }).toArray((err, result) => {
+  missions.find({ senderDeskId: req.params.deskId }).toArray((err, result) => {
     res.send(result);
   });
 });
 
 app.get("/desks/:deskId/tasks", (req, res) => {
-  missions.find({ receivingDesk: req.params.deskId }).toArray((err, result) => {
+  missions.find({ receivingDeskId: req.params.deskId }).toArray((err, result) => {
     res.send(result);
   });
 });
@@ -116,6 +118,8 @@ app.post("/missions", (req, res, next) => {
     if (err) {
       console.log(err);
       next(err);
+    } else {
+      res.sendStatus(200);
     }
   });
 });
@@ -130,6 +134,18 @@ app.delete("/missions/:id", async (req, res) => {
   const id = req.params.id;
   await missions.deleteOne({ _id: ObjectId(id) });
   res.sendStatus(200);
+});
+
+app.post("/tasks", (req, res, next) => {
+  const doc = req.body;
+  tasks.insertOne(doc, (err, result) => {
+    if (err) {
+      console.log(err);
+      next(err);
+    } else {
+      res.sendStatus(200);
+    }
+  });
 });
 
 /* TEST - ONLY UNCOMMENT IF AND ONLY IF THERE IS A CRITICAL DB/SERVER CONNECTION ERROR - UNCOMMENT ABOVE IN CLIENT CONNECT
