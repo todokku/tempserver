@@ -118,21 +118,20 @@ app.get("/admin/:adminId/missions", (req, res) => {
 });
 
 app.get("/admin/:adminId/tasks", (req, res) => {
-  tasks.find({ }).toArray((err, result) => {
+  tasks.find({ receivingAdminId: req.params.adminId }).toArray((err, result) => {
     res.send(result);
   });
 });
 
-app.post("/missions", (req, res, next) => {
-  const doc = req.body;
-  missions.insertOne(doc, (err, result) => {
-    if (err) {
-      console.log(err);
-      next(err);
-    } else {
-      res.sendStatus(200);
-    }
-  });
+app.post("/missions", async (req, res, next) => {
+  try {
+    const mission = req.body;
+    await missions.insertOne(mission);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
 });
 
 app.put("/missions/:id", async (req, res) => {
@@ -141,34 +140,36 @@ app.put("/missions/:id", async (req, res) => {
   res.sendStatus(200);
 });
 
-app.delete("/missions/:id", async (req, res) => {
-  const id = req.params.id;
-  await missions.deleteOne({ _id: id });
-  res.sendStatus(200);
-});
-
-app.post("/tasks", (req, res, next) => {
-  const doc = req.body;
-  tasks.insertOne(doc, (err, result) => {
-    if (err) {
-      console.log(err);
-      next(err);
-    } else {
-      res.sendStatus(200);
-    }
+app.get("/missions/:id/tasks", (req, res) => {
+  tasks.find({ "mission._id": req.params.id }).toArray((err, result) => {
+    res.send(result);
   });
 });
 
-/* TEST - ONLY UNCOMMENT IF AND ONLY IF THERE IS A CRITICAL DB/SERVER CONNECTION ERROR - UNCOMMENT ABOVE IN CLIENT CONNECT
-const insertDocumentTester = function(db, callback) {
-  // Get the documents collection
-  const collection = db.collection("masal");
-  // Insert some documents
-  collection.insertMany([{ a: 1 }, { a: 2 }, { a: 3 }], function(err, result) {
-    assert.equal(err, null);
-    assert.equal(3, result.result.n);
-    assert.equal(3, result.ops.length);
-    console.log("Inserted 3 documents into the collection");
-    callback(result);
-  });
-};*/
+app.post("/tasks", async (req, res, next) => {
+  try {
+    const task = req.body;
+    await tasks.insertOne(task);
+    const missionId = task.mission._id;
+    delete task.mission;
+    await missions.updateOne({ _id: missionId, "tasks._id": task._id }, { $set: { "tasks.$": task } });
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
+
+app.put("/tasks/:id", async (req, res, next) => {
+  try {
+    const task = req.body;
+    await tasks.replaceOne({ _id: req.params.id }, task);
+    const missionId = task.mission._id;
+    delete task.mission;
+    await missions.updateOne({ _id: missionId, "tasks._id": task._id }, { $set: { "tasks.$": task } });
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+});
