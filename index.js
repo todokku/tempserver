@@ -19,10 +19,14 @@ if (process.env.IS_PRODUCTION === "true") {
   CONNECTION_URL =
     "mongodb+srv://mike:hellman@dashboard-vcavt.azure.mongodb.net/test?retryWrites=true&w=majority";
   DATABASE_NAME = "dashboard";
-} else {
+} else if (process.env.IS_REDESIGN === "true") {
   CONNECTION_URL =
     "mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority";
   DATABASE_NAME = "dashboard-new";
+} else {
+  CONNECTION_URL =
+    "mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority";
+  DATABASE_NAME = "dashboard";
 }
 
 
