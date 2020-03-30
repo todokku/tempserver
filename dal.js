@@ -18,7 +18,6 @@ const init = async (url, name) => {
 }
 
 const getTable = (tableName) => {
-    console.log(tableName);
     if(tables[tableName] === undefined){
         tables[tableName] = database.collection(tableName);
     }

@@ -6,9 +6,6 @@ const Config = require('./config');
 const DAL = require('./dal');
 const bodyParser = require('body-parser');
 
-// Connection to the mongo client
-const {MongoClient} = require('mongodb');
-
 const PORT = 8080;
 
 app.use(bodyParser.urlencoded({ extended: false }));

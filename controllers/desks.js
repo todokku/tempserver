@@ -11,7 +11,7 @@ router.get('/:deskId/missions', (req, res) => {
     });
 });
   
-router.get(':deskId/tasks', (req, res) => {
+router.get('/:deskId/tasks', (req, res) => {
     const tasks = getTable('tasks');
 
     tasks.find({ receivingDeskId: req.params.deskId }).toArray((err, result) => {
