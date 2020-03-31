@@ -60,7 +60,7 @@ app.get('/token/:container', (async (req, res, next) => {
     res.send(token);
   }
   catch (err) {
-    console.log(exception);
+    console.log(err);
     next(err);
   }
 }))
