@@ -2,7 +2,7 @@ const USERS_ROUTE = 'users';
 const DESKS_ROUTE = 'desks';
 const MISSIONS_ROUTE = 'missions';
 const TASKS_ROUTE = 'tasks';
-const ADMIN_ROUTE = 'admin';
+const ADMIN_ROUTE = 'admins';
 
 const Controllers = [
     {
