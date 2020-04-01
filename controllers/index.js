@@ -2,6 +2,7 @@ const USERS_ROUTE = 'users';
 const DESKS_ROUTE = 'desks';
 const MISSIONS_ROUTE = 'missions';
 const TASKS_ROUTE = 'tasks';
+const STATS_ROUTE = 'stats';
 const ADMINS_ROUTE = 'admins';
 const USER_ORDERS_ROUTE = 'user-orders';
 
@@ -25,6 +26,10 @@ const Controllers = [
     {
         baseRoute: ADMINS_ROUTE,
         controller: require('./admins')
+    },
+    {
+        baseRoute: STATS_ROUTE,
+        controller: require('./stats')
     },
     {
         baseRoute: USER_ORDERS_ROUTE,
