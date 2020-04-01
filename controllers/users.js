@@ -18,6 +18,7 @@ router.get('/', (req, res) => {
                         inProgress,
                         approved 
                     } = getStatusStats(missions, user, tasks);
+
                     const missionsCount = waitingApproval + done + inProgress + approved;
                     return {
                         ...user,
@@ -57,7 +58,7 @@ router.get('/:userId/missions', (req, res) => {
 });
 
 router.get('/:userId/tasks', (req, res) => {
-    tasks.find({ receivingUserId: req.params.userId }).toArray((err, result) => {
+    tasksCollection.find({ receivingUserId: req.params.userId }).toArray((err, result) => {
         res.send(result);
     });
 });
