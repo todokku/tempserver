@@ -13,4 +13,4 @@ const Config = {
     }
 }
 
-module.exports = Config[process.env.NODE_ENV] || Config.development;
+module.exports = Config.redesign || Config.development;

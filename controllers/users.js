@@ -1,19 +1,39 @@
-const {Router} = require('express');
-const {getTable} = require('../dal');
+const { Router } = require('express');
+const { getTable } = require('../dal');
+const { getStatusStats } = require('./stats/deskStats')
 
 const router = Router();
-const users = getTable('users');
+const usersCollection = getTable('users');
+const missionsCollection = getTable('missions')
+const tasksCollection = getTable('tasks');
 
 router.get('/', (req, res) => {
-    users.find({}).toArray((err, result) => {
-        res.send(result);
+    usersCollection.find({}).toArray((err, users) => {
+        missionsCollection.find({}).toArray((err, missions) => {
+            tasksCollection.find({}).toArray((err, tasks) => {
+                const usersWithMissionsCount = users.map(user => {
+                    const { 
+                        waitingApproval,
+                        done,
+                        inProgress,
+                        approved 
+                    } = getStatusStats(missions, user, tasks);
+                    const missionsCount = waitingApproval + done + inProgress + approved;
+                    return {
+                        ...user,
+                        missionsCount
+                    }
+                });
+                res.send(usersWithMissionsCount);
+            });
+        });
     });
 });
 
 router.post('/', (req, res, next) => {
     const doc = req.body;
-    
-    users.insertOne(doc, (err, result) => {
+
+    usersCollection.insertOne(doc, (err, result) => {
         if (err) {
             console.log(err);
             next(err);
@@ -25,22 +45,18 @@ router.post('/', (req, res, next) => {
 
 router.put('/:id', async (req, res) => {
     const data = req.body;
-    
-    await users.replaceOne({ _id: req.params.id }, data)
+
+    await usersCollection.replaceOne({ _id: req.params.id }, data)
     res.sendStatus(200);
 });
 
 router.get('/:userId/missions', (req, res) => {
-    const missions = getTable('missions');
-    
-    missions.find({ senderUserId: req.params.userId }).toArray((err, result) => {
+    missionsCollection.find({ senderUserId: req.params.userId }).toArray((err, result) => {
         res.send(result);
     });
 });
 
 router.get('/:userId/tasks', (req, res) => {
-    const tasks = getTable('tasks');
-    
     tasks.find({ receivingUserId: req.params.userId }).toArray((err, result) => {
         res.send(result);
     });

@@ -71,5 +71,6 @@ async function getDeskStats() {
 }
 
 module.exports = {
-    getDeskStats
+    getDeskStats,
+    getStatusStats
 }
