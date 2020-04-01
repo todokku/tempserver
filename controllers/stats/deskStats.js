@@ -32,17 +32,9 @@ function getDeskUser(deskId) {
     });
 }
 
-function getMissions(deskId) {
+function getTasks() {
     return new Promise((resolve, reject) => {
-        missionsCollection.find({ senderDeskId: deskId }).toArray((err, result) => {
-            resolve(result);
-        });
-    });
-}
-
-function getTasks(deskId) {
-    return new Promise((resolve, reject) => {
-        tasksCollection.find({ receivingDeskId: deskId }).toArray((err, result) => {
+        tasksCollection.find({}).toArray((err, result) => {
             resolve(result);
         });
     });
@@ -55,14 +47,13 @@ async function getDeskStats() {
                 return mission.senderDeskId;
             });
 
+            const tasks = await getTasks();
             const deskStats = {};
             const deskIds = Object.keys(missionsByDesk);
             for (let index = 0; index < deskIds.length; index++) {
                 const deskId = deskIds[index];
                 const deskUser = await getDeskUser(deskId);
-                const deskMissions = await getMissions(deskId);
-                const tasks = await getTasks(deskId);
-                deskStats[deskUser.name] = getStatusStats(deskMissions, deskUser, tasks);
+                deskStats[deskUser.name] = getStatusStats(missions, deskUser, tasks);
             }
 
             resolve(deskStats);
