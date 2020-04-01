@@ -5,7 +5,8 @@ const router = Router();
 const tasks = getTable('tasks');
 
 router.post('/', async (req, res, next) => {
-    try {
+  const missions = getTable('missions');
+  try {
       const task = req.body;
       await tasks.insertOne(task);
       const missionId = task.mission._id;
@@ -19,6 +20,7 @@ router.post('/', async (req, res, next) => {
 });
   
 router.put('/:id', async (req, res, next) => {
+  const missions = getTable('missions');
     try {
         const task = req.body;
         await tasks.replaceOne({ _id: req.params.id }, task);
