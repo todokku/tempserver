@@ -10,6 +10,16 @@ router.get('/', (req, res) => {
     });
 });
 
+router.get("/:id", async (req, res) => {
+    const mission = await missions.find({ _id: req.params.id }).toArray();
+    res.send(mission.length === 1? mission[0] : null);
+});
+
+router.delete("/:id", async(req, res) => {
+    await missions.deleteOne({ _id: req.params.id});
+    res.sendStatus(200);
+});
+
 router.post('/', async (req, res, next) => {
     try {
         const mission = req.body;
