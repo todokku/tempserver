@@ -1,3 +1,4 @@
+const { ObjectID } = require('mongodb');
 const dal = require('./dal');
 const fetch = require('node-fetch');
 let adminId;
@@ -8,36 +9,86 @@ let adminId;
     const mongoUrl = 'mongodb+srv://admin:admin@cluster0-3ftjv.mongodb.net/test?retryWrites=true&w=majority';
     const dbName = 'dashboard-new';
     const usersCollectionName = "users-amitai";
+    const userOrdersCollectionName = "user-orders"
     const missionsCollectionName = "missions-amitai";
     const tasksCollectionName = "tasks-amitai";
 
     await dal.init(mongoUrl, dbName);
     const usersCollection = dal.getTable(usersCollectionName);
+    const userOrdersCollection = dal.getTable(userOrdersCollectionName);
     const missionsCollection = dal.getTable(missionsCollectionName);
     const tasksCollection = dal.getTable(tasksCollectionName);
 
     const oldUsers = await fetch(usersUrl).then(result => result.json());
-    const users = convertUsers(oldUsers);
-    adminId = users.find(({ type }) => type === "admin")._id;
+    const existingUsers = convertUsers(oldUsers);
+    const userOrders = getUserOrders(existingUsers);
 
     let masals = await fetch(masalsUrl).then(result => result.json());
     console.log("before uniq: ", masals.length);
     masals = masals.filter(m => m.missionRequests.length > 0); //Get rid of masals without tasks. 
-    masals = uniq(masals, masal => masal.missionRequests[0].id); //Get rid of duplicates. They exist. see task id 10_5obajdjz5
+    console.log("actually before uniq: ", masals.length);
+    masals = uniqMasals(masals); //Get rid of duplicates. They exist. see task id 10_5obajdjz5
     console.log("after uniq: ", masals.length);
 
-    const { missions, tasks } = convertMasals(masals, users);
+    const { missions, tasks, users } = convertMasals(masals, existingUsers);
 
     await usersCollection.insertMany(users);
+    await userOrdersCollection.insertMany(userOrders);
     await missionsCollection.insertMany(missions);
     await tasksCollection.insertMany(tasks);
 })().then(() => console.log("done")).catch(e => console.error(e));
 
-const uniq = (data, extractKey = x => x) => {
-    return data.map((item, i) => data
-        .slice(i + 1)
-        .some(innerItem => extractKey(innerItem) === extractKey(item)) ? null : item
-    ).filter(item => item !== null);
+const uniqMasals = masals => {
+    const uniques = [];
+    const duplicates = {};
+
+    masals.forEach(masal => {
+        if (masals.filter(innerMasal => masal.missionRequests[0].id === innerMasal.missionRequests[0].id).length > 1) {
+            duplicates[masal.missionRequests[0].id] = (duplicates[masal.missionRequests[0].id] || []).concat(masal);
+        } else {
+            uniques.push(masal);
+        }
+    });
+    const statusOrder = [
+        {
+            missionStatus: "חדש",
+            adminLevel: 0
+        },
+        {
+            missionStatus: "לא אושר",
+            adminLevel: 0
+        },
+        {
+            missionStatus: "חדש",
+            adminLevel: 1
+        },
+        {
+            missionStatus: "לא אושר",
+            adminLevel: 1
+        },
+        {
+            missionStatus: "אושר"
+        },
+        {
+            missionStatus: "בביצוע"
+        },
+        {
+            missionStatus: "בוצע"
+        }
+    ];
+
+    const compareMasalAndStatus = masal => status => masal.missionStatus === status.missionStatus &&
+        (status.adminLevel === undefined || parseInt(masal.adminLevel) === status.adminLevel);
+
+    const selectedDuplicates = Object.values(duplicates).map(similarMasals => {
+        return similarMasals.sort((masal1, masal2) => {
+            const masal1Index = statusOrder.findIndex(compareMasalAndStatus(masal1));
+            const masal2Index = statusOrder.findIndex(compareMasalAndStatus(masal2));
+            return masal2Index - masal1Index;
+        })[0];
+    });
+
+    return [...uniques, ...selectedDuplicates];
 }
 
 const convertUsers = oldUsers => {
@@ -73,19 +124,66 @@ const convertUsers = oldUsers => {
         });
 
     return [admin, ...users];
-}
+};
+
+const getUserOrders = users => {
+    adminId = users.find(({ type }) => type === "admin")._id;
+
+    const deskNamesOrder = [
+        "מחוזות",
+        'יכולות צה"ל',
+        "משרדי ממשלה",
+        'ארגוני כ"א',
+        "צריכים מנטאליים",
+        "ארגוני מזון",
+        "כלכלי חברתי"
+    ].map(deskName => "ראש דסק " + deskName);
+    const desks = users.filter(({ parentId }) => parentId === adminId)
+        .sort((desk1, desk2) => deskNamesOrder.indexOf(desk1.name) - deskNamesOrder.indexOf(desk2.name));
+
+    const adminOrder = {
+        _id: adminId,
+        type: "admin",
+        order: desks.map(({ _id }) => _id)
+    };
+    const deskOrders = desks.map(desk => ({
+        _id: desk._id,
+        type: "desk",
+        order: users.filter(({ parentId }) => parentId === desk._id).map(({ _id }) => _id)
+    }));
+
+    return [adminOrder, ...deskOrders];
+};
 
 const convertMasals = (masals, users) => {
-    const usersNameMap = users.reduce((final, user) => {
-        final[user.name] = user;
+    const userNameToId = users.reduce((final, user) => {
+        final[user.name] = user._id;
         return final;
     }, {});
+    const deletedUsers = [];
+
+    const getUserIdByName = userName => {
+        let id = userNameToId[userName];
+        if (!id) {
+            const user = deletedUsers.find(user => user.name === userName);
+            id = user && user._id;
+            if (!id) {
+                id = new ObjectID().toHexString();
+                deletedUsers.push({
+                    _id: id,
+                    type: "deleted",
+                    name: userName
+                });
+            }
+        }
+        return id;
+    };
 
     const masalToMissionAndTasks = masal => {
         let mission = {}, tasks = [];
         mission._id = masal._id;
-        mission.senderUserId = usersNameMap[masal.senderName]._id;
-        mission.senderDeskId = usersNameMap["ראש דסק " + masal.senderGroup]._id;
+        mission.senderUserId = getUserIdByName(masal.senderName);
+        mission.senderDeskId = getUserIdByName("ראש דסק " + masal.senderGroup);
         mission.location = masal.missionLocation || null;
         mission.reshut = masal.missionReshut;
         mission.urgency = masal.missionUrgency;
@@ -134,17 +232,17 @@ const convertMasals = (masals, users) => {
         if (mission.status === "adminApproved") {
             let taskStatus,
                 taskReceivingAdminId = adminId,
-                taskReceivingDeskId = usersNameMap[masal.receivingGroup]._id,
+                taskReceivingDeskId = getUserIdByName(masal.receivingGroup),
                 taskReceivingUserId = null;
 
             if (masal.missionStatus === "אושר") {
                 taskStatus = "desk";
             } else if (masal.missionStatus === "בביצוע") {
                 taskStatus = "user";
-                taskReceivingUserId = usersNameMap[masal.receivingName]._id;
+                taskReceivingUserId = getUserIdByName(masal.receivingName);
             } else if (masal.missionStatus === "בוצע") {
                 taskStatus = "done";
-                taskReceivingUserId = usersNameMap[masal.receivingName]._id;
+                taskReceivingUserId = getUserIdByName(masal.receivingName);
             }
 
             const missionForTask = {
@@ -176,5 +274,5 @@ const convertMasals = (masals, users) => {
         final.missions.push(mission);
         final.tasks.push(...tasks);
         return final;
-    }, { missions: [], tasks: [] });
+    }, { missions: [], tasks: [], users: users.concat(deletedUsers) });
 }
