@@ -1,7 +1,7 @@
 const { Router } = require('express');
-const { getLastWeekStats } = require('./missionStats');
-const { getDeskStats } = require('./deskStats');
-const { getTaskStats } = require('./taskStats');
+const { getLastWeekStats } = require('../utils/stats/missionStats');
+const { getDeskStats } = require('../utils/stats/deskStats');
+const { getTaskStats } = require('../utils/stats/taskStats');
 
 const router = Router();
 

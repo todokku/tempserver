@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { getTable } = require('../dal');
-const { getStatusStats } = require('./stats/deskStats')
+const { getStatusStats } = require('../utils/stats/deskStats')
 
 const router = Router();
 const usersCollection = getTable('users');
