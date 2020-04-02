@@ -42,22 +42,41 @@ function getTasks() {
 
 async function getDeskStats() {
     return new Promise((resolve, reject) => {
-        missionsCollection.find({}).toArray(async (err, missions) => {
-            const missionsByDesk = _.groupBy(missions, mission => {
-                return mission.senderDeskId;
+        usersCollection.find({}).toArray(async (err, users) => {
+            missionsCollection.find({}).toArray(async (err, missions) => {
+                const desks = users.filter(({ type }) => type === "desk");
+                const deskIdToMissions = missions.reduce((final, mission) => {
+                    final[mission.senderDeskId] = (final[mission.senderDeskId] || []).concat(mission);
+                    return final;
+                }, {});
+
+                const getMissionStatus = mission => {
+                    if (mission.status === "deskApproved" || mission.status === "new") {
+                        return "waitingApproval";
+                    }
+                    if (mission.status === "deskRejected" || mission.status === "adminRejected") {
+                        return "rejected";
+                    }
+                    if (mission.tasks.every(task => task.status === "done")) {
+                        return "done";
+                    }
+                    return "inProgress";
+                }
+
+                const statuses = ["waitingApproval", "rejected", "inProgress", "done"];
+
+                const deskStats = desks.reduce((final, desk) => {
+                    const deskMissions = deskIdToMissions[desk._id];
+                    final[desk.name.replace("ראש דסק", "").trim()] = statuses.reduce((final, status) => {
+                        final[status] = deskMissions.filter(mission => getMissionStatus(mission) === status).length;
+                        return final;
+                    }, {});
+                    return final;
+                }, {});
+
+                resolve({ stats: deskStats, missionsCount: missions.length });
             });
-
-            const tasks = await getTasks();
-            const deskStats = {};
-            const deskIds = Object.keys(missionsByDesk);
-            for (let index = 0; index < deskIds.length; index++) {
-                const deskId = deskIds[index];
-                const deskUser = await getDeskUser(deskId);
-                deskStats[deskUser.name] = getStatusStats(missions, deskUser, tasks);
-            }
-
-            resolve(deskStats);
-        });
+        })
     });
 }
 
