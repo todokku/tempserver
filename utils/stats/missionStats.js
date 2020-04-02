@@ -8,7 +8,7 @@ const NUM_OF_DAYS = 8;
 function getLastDays(numOfDays) {
     const days = [];
     for (let i = 0; i < numOfDays; i++) {
-        date = moment().utc();
+        date = moment().utc(true);
         date.subtract(i, 'day').startOf('day');
         days.push(date.format("DD/MM"));
     }
@@ -20,7 +20,7 @@ async function getLastWeekStats() {
     return new Promise((resolve, reject) => {
         missionsCollection.find({}).toArray((err, missions) => {
             const lastSevenDays = getLastDays(NUM_OF_DAYS);
-            const creationDates = missions.map(mission => moment(mission.openedDate));
+            const creationDates = missions.map(mission => moment(mission.openedDate).utc(true));
             const groupedDays = _.groupBy(creationDates, date => {
                 const utcDate = date.utc();
                 return utcDate.startOf('day').format();
@@ -29,7 +29,7 @@ async function getLastWeekStats() {
             // Make an object that includes count of each day we grouped.
             const groupedDaysWithCount = {};
             Object.keys(groupedDays).forEach(key => {
-                const dayKeyFormatted = moment(key).format("DD/MM");
+                const dayKeyFormatted = moment(key).utc(true).format("DD/MM");
                 if (lastSevenDays.includes(dayKeyFormatted)) {
                     groupedDaysWithCount[dayKeyFormatted] = groupedDays[key].length;
                 }
